@@ -6,3 +6,5 @@ feedparser
 nltk
 pytrends
 requests
+fastapi
+uvicorn[standard]
