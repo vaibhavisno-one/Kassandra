@@ -57,6 +57,82 @@ def train_baseline_model(features_df: pd.DataFrame):
     return model, metrics
 
 
+def train_with_ablation(features_df: pd.DataFrame):
+    """
+    Train models with ablation study: baseline (price-only) vs sentiment-aware.
+    
+    Args:
+        features_df: DataFrame with all features including sentiment
+    
+    Returns:
+        Tuple of (sentiment_aware_model, baseline_metrics, sentiment_metrics)
+    """
+    # Create supervised dataset
+    df = features_df.copy()
+    df['target'] = df['Close'].shift(-1)
+    df = df.dropna()
+    
+    # Identify all numeric feature columns (exclude OHLCV, target)
+    exclude_cols = ['Open', 'High', 'Low', 'Close', 'Volume', 'target']
+    all_feature_cols = [col for col in df.columns if col not in exclude_cols and df[col].dtype in ['float64', 'int64']]
+    
+    # Baseline features (price-only)
+    baseline_feature_cols = ['daily_return', 'ma_5', 'ma_10', 'volatility_5']
+    
+    # Sentiment-aware features (price + sentiment)
+    sentiment_feature_cols = all_feature_cols
+    
+    y = df['target'].values
+    
+    # Time-based split
+    split_idx = int(len(df) * 0.8)
+    
+    # Train baseline model (price-only)
+    X_baseline = df[baseline_feature_cols].values
+    X_train_base, X_val_base = X_baseline[:split_idx], X_baseline[split_idx:]
+    y_train, y_val = y[:split_idx], y[split_idx:]
+    
+    baseline_model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+    baseline_model.fit(X_train_base, y_train)
+    
+    y_pred_base = baseline_model.predict(X_val_base)
+    baseline_mae = mean_absolute_error(y_val, y_pred_base)
+    baseline_rmse = np.sqrt(mean_squared_error(y_val, y_pred_base))
+    
+    # Train sentiment-aware model (price + sentiment)
+    X_sentiment = df[sentiment_feature_cols].values
+    X_train_sent, X_val_sent = X_sentiment[:split_idx], X_sentiment[split_idx:]
+    
+    sentiment_model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+    sentiment_model.fit(X_train_sent, y_train)
+    
+    y_pred_sent = sentiment_model.predict(X_val_sent)
+    sentiment_mae = mean_absolute_error(y_val, y_pred_sent)
+    sentiment_rmse = np.sqrt(mean_squared_error(y_val, y_pred_sent))
+    
+    # Calculate improvement
+    improvement = ((baseline_rmse - sentiment_rmse) / baseline_rmse) * 100
+    
+    baseline_metrics = {
+        'mae': baseline_mae,
+        'rmse': baseline_rmse,
+        'train_size': len(X_train_base),
+        'val_size': len(X_val_base),
+        'features': baseline_feature_cols
+    }
+    
+    sentiment_metrics = {
+        'mae': sentiment_mae,
+        'rmse': sentiment_rmse,
+        'train_size': len(X_train_sent),
+        'val_size': len(X_val_sent),
+        'features': sentiment_feature_cols,
+        'improvement': improvement
+    }
+    
+    return sentiment_model, baseline_metrics, sentiment_metrics
+
+
 def train_model(features: dict) -> object:
     """
     Train the stock prediction model.

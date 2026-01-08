@@ -9,6 +9,7 @@ OUTPUT CONTRACT:
     - Predicted closing price for the next trading day: float
 """
 import sys
+import pandas as pd
 from data.prices import fetch_historical_prices
 from utils.dates import validate_and_normalize_dates
 from features.technical import build_technical_features
@@ -41,45 +42,90 @@ def main(stock_name: str, start_date: str, end_date: str):
     print(f"\nBuilding technical features...")
     features = build_technical_features(prices)
     
-    # Step 5: Display feature statistics
-    print(f"\nFeature DataFrame shape: {features.shape}")
-    print("\nLast 5 rows of features:")
+    # Step 5: Fetch news sentiment data
+    print(f"\nFetching news sentiment...")
+    from data.news import fetch_news_sentiment
+    from features.sentiment import align_sentiment_features
+    
+    sentiment_df = fetch_news_sentiment(stock_name, start_date, end_date)
+    
+    if not sentiment_df.empty:
+        print(f"Fetched sentiment for {len(sentiment_df)} days")
+        
+        # Show sentiment visibility check
+        non_zero_sentiment = sentiment_df[sentiment_df['article_count'] > 0]
+        if not non_zero_sentiment.empty:
+            print(f"\nSample sentiment rows (non-zero):")
+            print(non_zero_sentiment.head(5)[['date', 'avg_sentiment', 'article_count']].to_string(index=False))
+        else:
+            print("Warning: All sentiment values are zero")
+    else:
+        print("No sentiment data available, using neutral values")
+    
+    # Step 6: Align sentiment with trading days
+    sentiment_features = align_sentiment_features(sentiment_df, features)
+    
+    # Step 7: Merge sentiment features with technical features
+    features = pd.concat([features, sentiment_features], axis=1)
+    
+    # Step 8: Display merged feature statistics
+    print(f"\nMerged Feature DataFrame shape: {features.shape}")
+    print("\nLast 5 rows of merged features:")
     print(features.tail())
     
-    # Step 6: Train baseline model
-    print(f"\nTraining baseline model...")
-    model, metrics = train_baseline_model(features)
+    # Step 9: Train models with ablation study
+    print(f"\nTraining models with ablation study...")
+    from model.train import train_with_ablation
     
-    print(f"\nModel trained successfully!")
-    print(f"Training samples: {metrics['train_size']}")
-    print(f"Validation samples: {metrics['val_size']}")
-    print(f"Validation MAE: ${metrics['mae']:.2f}")
-    print(f"Validation RMSE: ${metrics['rmse']:.2f}")
+    sentiment_model, baseline_metrics, sentiment_metrics = train_with_ablation(features)
     
-    # Step 7: Predict next trading day's closing price
-    latest_features = features.iloc[-1]
-    prediction = predict_next_close(model, latest_features)
+    # Step 10: Display model comparison
+    print(f"\n{'='*60}")
+    print("MODEL COMPARISON")
+    print(f"{'='*60}")
+    print(f"\nBaseline Model (Price-only features):")
+    print(f"  Features: {', '.join(baseline_metrics['features'])}")
+    print(f"  Training samples: {baseline_metrics['train_size']}")
+    print(f"  Validation samples: {baseline_metrics['val_size']}")
+    print(f"  Validation MAE: ${baseline_metrics['mae']:.2f}")
+    print(f"  Validation RMSE: ${baseline_metrics['rmse']:.2f}")
+    
+    print(f"\nSentiment-Aware Model (Price + Sentiment features):")
+    print(f"  Features: {', '.join(sentiment_metrics['features'])}")
+    print(f"  Training samples: {sentiment_metrics['train_size']}")
+    print(f"  Validation samples: {sentiment_metrics['val_size']}")
+    print(f"  Validation MAE: ${sentiment_metrics['mae']:.2f}")
+    print(f"  Validation RMSE: ${sentiment_metrics['rmse']:.2f}")
     
     print(f"\n{'='*60}")
-    print(f"Predicted next-day closing price for {stock_name}: ${prediction:.2f}")
+    print("IMPACT SUMMARY")
+    print(f"{'='*60}")
+    print(f"Baseline RMSE:  ${baseline_metrics['rmse']:.2f}")
+    print(f"Sentiment RMSE: ${sentiment_metrics['rmse']:.2f}")
+    if sentiment_metrics['improvement'] > 0:
+        print(f"Improvement:    {sentiment_metrics['improvement']:.2f}% (sentiment helps!)")
+    else:
+        print(f"Improvement:    {sentiment_metrics['improvement']:.2f}% (sentiment doesn't help)")
     print(f"{'='*60}")
     
-    # Step 8: Fetch news sentiment data (TODO)
-    # news_data = data.news.fetch_news_sentiment(stock_name, start_date, end_date)
+    # Step 11: Predict next trading day's closing price using sentiment-aware model
+    latest_features = features.iloc[-1]
+    prediction = predict_next_close(sentiment_model, latest_features, sentiment_metrics['features'])
     
-    # Step 9: Fetch search trends data (TODO)
+    print(f"\n{'='*60}")
+    print(f"Sentiment-aware predicted next-day closing price for {stock_name}: ${prediction:.2f}")
+    print(f"{'='*60}")
+    
+    # Step 12: Fetch search trends data (TODO)
     # trends_data = data.trends.fetch_search_trends(stock_name, start_date, end_date)
     
-    # Step 10: Extract sentiment features from news (TODO)
-    # sentiment_features = features.sentiment.extract_features(news_data)
-    
-    # Step 11: Combine all features (TODO)
+    # Step 13: Combine all features (TODO)
     # combined_features = combine_features(technical_features, sentiment_features, trends_data)
     
-    # Step 12: Retrain with all features (TODO)
+    # Step 14: Retrain with all features (TODO)
     # model = model.train.train_model(combined_features)
     
-    # Step 13: Make final prediction (TODO)
+    # Step 15: Make final prediction (TODO)
     # prediction = model.predict.predict_next_day(model, combined_features)
 
 

@@ -5,19 +5,21 @@ import pandas as pd
 import numpy as np
 
 
-def predict_next_close(model, latest_features: pd.Series) -> float:
+def predict_next_close(model, latest_features: pd.Series, feature_cols: list = None) -> float:
     """
     Predict the closing price for the next trading day.
     
     Args:
         model: Trained model object
         latest_features: Series containing the most recent feature values
+        feature_cols: List of feature column names to use (optional)
     
     Returns:
         Predicted closing price
     """
-    # Extract feature values in correct order
-    feature_cols = ['daily_return', 'ma_5', 'ma_10', 'volatility_5']
+    # Use default feature columns if not specified
+    if feature_cols is None:
+        feature_cols = ['daily_return', 'ma_5', 'ma_10', 'volatility_5']
     
     X = latest_features[feature_cols].values.reshape(1, -1)
     

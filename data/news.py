@@ -15,6 +15,21 @@ except LookupError:
     nltk.download('vader_lexicon', quiet=True)
 
 
+# Stock ticker to company name mapping
+TICKER_TO_COMPANY = {
+    'AAPL': 'Apple',
+    'GOOGL': 'Google',
+    'MSFT': 'Microsoft',
+    'AMZN': 'Amazon',
+    'TSLA': 'Tesla',
+    'META': 'Meta',
+    'NVDA': 'Nvidia',
+    'NFLX': 'Netflix',
+    'AMD': 'AMD',
+    'INTC': 'Intel'
+}
+
+
 def fetch_news_sentiment(stock: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
     Fetch news headlines and compute sentiment scores.
@@ -30,62 +45,74 @@ def fetch_news_sentiment(stock: str, start_date: str, end_date: str) -> pd.DataF
     # Initialize VADER sentiment analyzer
     sia = SentimentIntensityAnalyzer()
     
-    # Google News RSS feed URL
-    query = f"{stock} stock"
-    rss_url = f"https://news.google.com/rss/search?q={query.replace(' ', '+')}&hl=en-US&gl=US&ceid=US:en"
+    # Get company name
+    company_name = TICKER_TO_COMPANY.get(stock.upper(), stock)
     
-    try:
-        # Fetch RSS feed
-        feed = feedparser.parse(rss_url)
-        
-        articles = []
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-        
-        for entry in feed.entries:
-            # Parse publication date
-            if hasattr(entry, 'published_parsed'):
-                pub_date = datetime(*entry.published_parsed[:6])
-            else:
-                continue
+    # Create multiple query patterns for better coverage
+    query_patterns = [
+        f"{company_name} stock",
+        f"{company_name} shares",
+        f"{company_name} earnings",
+        f"{stock} stock price",
+        f"{company_name} financial"
+    ]
+    
+    all_articles = []
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+    
+    # Fetch from multiple queries
+    for query in query_patterns:
+        try:
+            print("News queries being used:", query_patterns)
+            rss_url = f"https://news.google.com/rss/search?q={query.replace(' ', '+')}&hl=en-US&gl=US&ceid=US:en"
+            feed = feedparser.parse(rss_url)
             
-            # Filter by date range
-            if start_dt <= pub_date <= end_dt:
-                # Get headline
-                headline = entry.title if hasattr(entry, 'title') else ""
+            for entry in feed.entries:
+                # Parse publication date
+                if hasattr(entry, 'published_parsed'):
+                    pub_date = datetime(*entry.published_parsed[:6])
+                else:
+                    continue
                 
-                # Compute sentiment
-                sentiment_scores = sia.polarity_scores(headline)
-                compound_score = sentiment_scores['compound']
-                
-                articles.append({
-                    'date': pub_date.date(),
-                    'headline': headline,
-                    'sentiment': compound_score
-                })
-        
-        if not articles:
-            # Return empty DataFrame with proper structure
-            return pd.DataFrame(columns=['date', 'avg_sentiment', 'article_count'])
-        
-        # Convert to DataFrame
-        df = pd.DataFrame(articles)
-        
-        # Aggregate by day
-        daily_sentiment = df.groupby('date').agg({
-            'sentiment': 'mean',
-            'headline': 'count'
-        }).reset_index()
-        
-        daily_sentiment.columns = ['date', 'avg_sentiment', 'article_count']
-        daily_sentiment['date'] = pd.to_datetime(daily_sentiment['date'])
-        
-        return daily_sentiment
+                # Filter by date range (relaxed to get more recent data)
+                if pub_date <= end_dt + timedelta(days=30):  # Allow recent articles
+                    # Get headline
+                    headline = entry.title if hasattr(entry, 'title') else ""
+                    
+                    if headline:
+                        # Compute sentiment
+                        sentiment_scores = sia.polarity_scores(headline)
+                        compound_score = sentiment_scores['compound']
+                        
+                        all_articles.append({
+                            'date': pub_date.date(),
+                            'headline': headline,
+                            'sentiment': compound_score
+                        })
+        except Exception as e:
+            continue
     
-    except Exception as e:
-        print(f"Warning: Could not fetch news data: {e}")
-        # Return empty DataFrame
+    if not all_articles:
+        # Return empty DataFrame with proper structure
         return pd.DataFrame(columns=['date', 'avg_sentiment', 'article_count'])
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(all_articles)
+    
+    # Deduplicate by headline and date
+    df = df.drop_duplicates(subset=['headline', 'date'], keep='first')
+    
+    # Aggregate by day
+    daily_sentiment = df.groupby('date').agg({
+        'sentiment': 'mean',
+        'headline': 'count'
+    }).reset_index()
+    
+    daily_sentiment.columns = ['date', 'avg_sentiment', 'article_count']
+    daily_sentiment['date'] = pd.to_datetime(daily_sentiment['date'])
+    
+    return daily_sentiment
 
 
 def fetch_news_data(stock_name: str, start_date: str, end_date: str) -> dict:
