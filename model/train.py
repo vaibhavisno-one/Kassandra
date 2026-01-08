@@ -7,15 +7,16 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
-def train_baseline_model(features_df: pd.DataFrame):
+def train_baseline_model(features_df: pd.DataFrame, feature_columns=None):
     """
     Train a baseline supervised learning model for next-day price prediction.
     
     Args:
         features_df: DataFrame with technical features and Close price
+        feature_columns: List of feature column names to use (optional)
     
     Returns:
-        Tuple of (trained_model, validation_metrics)
+        Trained model
     """
     # Create supervised dataset: features at time t predict Close at t+1
     df = features_df.copy()
@@ -26,8 +27,11 @@ def train_baseline_model(features_df: pd.DataFrame):
     # Drop last row (no target available)
     df = df.dropna()
     
-    # Define feature columns (exclude original OHLCV and target)
-    feature_cols = ['daily_return', 'ma_5', 'ma_10', 'volatility_5']
+    # Define feature columns
+    if feature_columns is None:
+        feature_cols = ['daily_return', 'ma_5', 'ma_10', 'volatility_5']
+    else:
+        feature_cols = feature_columns
     
     X = df[feature_cols].values
     y = df['target'].values
@@ -47,14 +51,12 @@ def train_baseline_model(features_df: pd.DataFrame):
     mae = mean_absolute_error(y_val, y_pred)
     rmse = np.sqrt(mean_squared_error(y_val, y_pred))
     
-    metrics = {
-        'mae': mae,
-        'rmse': rmse,
-        'train_size': len(X_train),
-        'val_size': len(X_val)
-    }
+    print(f"  Training samples: {len(X_train)}")
+    print(f"  Validation samples: {len(X_val)}")
+    print(f"  Validation MAE: ${mae:.2f}")
+    print(f"  Validation RMSE: ${rmse:.2f}")
     
-    return model, metrics
+    return model
 
 
 def train_with_ablation(features_df: pd.DataFrame):

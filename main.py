@@ -17,6 +17,39 @@ from model.train import train_baseline_model
 from model.predict import predict_next_close
 
 
+def normalize_date_column(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize DataFrame to have timezone-naive date column.
+    
+    Args:
+        df: DataFrame with date as index or column
+    
+    Returns:
+        DataFrame with date as timezone-naive datetime column
+    """
+    if df.empty:
+        return df
+    
+    df = df.copy()
+    
+    # If date is in index, reset it
+    if df.index.name == 'date' or isinstance(df.index, pd.DatetimeIndex):
+        df = df.reset_index()
+        if 'index' in df.columns:
+            df = df.rename(columns={'index': 'date'})
+    
+    # Ensure date column exists
+    if 'date' not in df.columns:
+        raise ValueError("DataFrame must have 'date' column or DatetimeIndex")
+    
+    # Convert to datetime and remove timezone
+    df['date'] = pd.to_datetime(df['date'])
+    if df['date'].dt.tz is not None:
+        df['date'] = df['date'].dt.tz_localize(None)
+    
+    return df
+
+
 def main(stock_name: str, start_date: str, end_date: str):
     """
     Main execution flow for stock prediction.
@@ -42,91 +75,194 @@ def main(stock_name: str, start_date: str, end_date: str):
     print(f"\nBuilding technical features...")
     features = build_technical_features(prices)
     
+    # Normalize technical features index to timezone-naive datetime
+    features.index = pd.to_datetime(features.index).tz_localize(None)
+    
     # Step 5: Fetch news sentiment data
     print(f"\nFetching news sentiment...")
     from data.news import fetch_news_sentiment
-    from features.sentiment import align_sentiment_features
     
-    sentiment_df = fetch_news_sentiment(stock_name, start_date, end_date)
+    news_df = fetch_news_sentiment(stock_name, start_date, end_date)
     
-    if not sentiment_df.empty:
-        print(f"Fetched sentiment for {len(sentiment_df)} days")
-        
-        # Show sentiment visibility check
-        non_zero_sentiment = sentiment_df[sentiment_df['article_count'] > 0]
+    if not news_df.empty:
+        print(f"Fetched news sentiment for {len(news_df)} days")
+        non_zero_sentiment = news_df[news_df['article_count'] > 0]
         if not non_zero_sentiment.empty:
-            print(f"\nSample sentiment rows (non-zero):")
-            print(non_zero_sentiment.head(5)[['date', 'avg_sentiment', 'article_count']].to_string(index=False))
-        else:
-            print("Warning: All sentiment values are zero")
+            print(f"Sample news sentiment rows (non-zero):")
+            print(non_zero_sentiment.head(3)[['date', 'avg_sentiment', 'article_count']].to_string(index=False))
     else:
-        print("No sentiment data available, using neutral values")
+        print("No news sentiment data available")
     
-    # Step 6: Align sentiment with trading days
-    sentiment_features = align_sentiment_features(sentiment_df, features)
+    # Step 6: Fetch Google Trends data
+    print(f"\nFetching Google Trends...")
+    from sentiment.trends import fetch_google_trends
     
-    # Step 7: Merge sentiment features with technical features
-    features = pd.concat([features, sentiment_features], axis=1)
+    trends_df = fetch_google_trends(stock_name, start_date, end_date)
     
-    # Step 8: Display merged feature statistics
-    print(f"\nMerged Feature DataFrame shape: {features.shape}")
+    if not trends_df.empty:
+        print(f"Fetched Google Trends for {len(trends_df)} days")
+        print(f"Sample trends rows:")
+        print(trends_df.head(3)[['date', 'trend_score', 'trend_delta_7d']].to_string(index=False))
+    else:
+        print("No Google Trends data available")
+    
+    # Step 7: Fetch Wikipedia pageviews
+    print(f"\nFetching Wikipedia pageviews...")
+    from sentiment.wikipedia import fetch_wikipedia_pageviews
+    
+    wiki_df = fetch_wikipedia_pageviews(stock_name, start_date, end_date)
+    
+    if not wiki_df.empty:
+        print(f"Fetched Wikipedia pageviews for {len(wiki_df)} days")
+        print(f"Sample wiki rows:")
+        print(wiki_df.head(3)[['date', 'wiki_views', 'wiki_views_delta']].to_string(index=False))
+    else:
+        print("No Wikipedia pageviews data available")
+    
+    # Step 8: Compute combined sentiment
+    print(f"\nComputing combined sentiment...")
+    from sentiment.fusion import compute_combined_sentiment
+    
+    combined_sentiment_df = compute_combined_sentiment(news_df, trends_df, wiki_df)
+    
+    if not combined_sentiment_df.empty:
+        print(f"Combined sentiment computed for {len(combined_sentiment_df)} days")
+        non_zero_combined = combined_sentiment_df[combined_sentiment_df['combined_sentiment'].abs() > 0.01]
+        if not non_zero_combined.empty:
+            print(f"Sample combined sentiment rows (non-zero):")
+            print(non_zero_combined.head(5)[['date', 'combined_sentiment']].to_string(index=False))
+    
+    # Step 9: Merge all sentiment features with technical features
+    print(f"\nMerging all features...")
+    
+    # Prepare features for merging
+    features_with_date = features.reset_index()
+    features_with_date = features_with_date.rename(columns={'Date': 'date'})
+    features_with_date = normalize_date_column(features_with_date)
+    
+    # Normalize all sentiment DataFrames
+    news_df = normalize_date_column(news_df)
+    trends_df = normalize_date_column(trends_df)
+    wiki_df = normalize_date_column(wiki_df)
+    combined_sentiment_df = normalize_date_column(combined_sentiment_df)
+    
+    # Merge news sentiment
+    if not news_df.empty:
+        news_df_renamed = news_df.rename(columns={'avg_sentiment': 'avg_news_sentiment', 'article_count': 'news_article_count'})
+        features_with_date = pd.merge(features_with_date, news_df_renamed, on='date', how='left')
+    else:
+        features_with_date['avg_news_sentiment'] = 0.0
+        features_with_date['news_article_count'] = 0
+    
+    # Merge trends
+    if not trends_df.empty:
+        features_with_date = pd.merge(features_with_date, trends_df, on='date', how='left')
+    else:
+        features_with_date['trend_score'] = 0.0
+        features_with_date['trend_delta_7d'] = 0.0
+    
+    # Merge wiki
+    if not wiki_df.empty:
+        features_with_date = pd.merge(features_with_date, wiki_df, on='date', how='left')
+    else:
+        features_with_date['wiki_views'] = 0.0
+        features_with_date['wiki_views_delta'] = 0.0
+    
+    # Merge combined sentiment
+    if not combined_sentiment_df.empty:
+        features_with_date = pd.merge(features_with_date, combined_sentiment_df, on='date', how='left')
+    else:
+        features_with_date['combined_sentiment'] = 0.0
+    
+    # Fill NaN values with 0
+    features_with_date = features_with_date.fillna(0)
+    
+    # Set date back as index
+    features_with_date = features_with_date.set_index('date')
+    features = features_with_date
+    
+    # Step 10: Display merged feature statistics
+    print(f"\nFinal Feature DataFrame shape: {features.shape}")
+    print(f"Feature columns: {list(features.columns)}")
     print("\nLast 5 rows of merged features:")
     print(features.tail())
     
-    # Step 9: Train models with ablation study
-    print(f"\nTraining models with ablation study...")
-    from model.train import train_with_ablation
+    # Step 11: Train model with all sentiment features
+    print(f"\nTraining sentiment-aware model...")
     
-    sentiment_model, baseline_metrics, sentiment_metrics = train_with_ablation(features)
+    # Define feature columns
+    sentiment_feature_cols = [
+        'daily_return', 'ma_7', 'ma_21', 'volatility_7', 'volatility_21',
+        'avg_news_sentiment', 'news_article_count',
+        'trend_score', 'trend_delta_7d',
+        'wiki_views', 'wiki_views_delta',
+        'combined_sentiment'
+    ]
     
-    # Step 10: Display model comparison
-    print(f"\n{'='*60}")
-    print("MODEL COMPARISON")
-    print(f"{'='*60}")
-    print(f"\nBaseline Model (Price-only features):")
-    print(f"  Features: {', '.join(baseline_metrics['features'])}")
-    print(f"  Training samples: {baseline_metrics['train_size']}")
-    print(f"  Validation samples: {baseline_metrics['val_size']}")
-    print(f"  Validation MAE: ${baseline_metrics['mae']:.2f}")
-    print(f"  Validation RMSE: ${baseline_metrics['rmse']:.2f}")
+    # Filter to only existing columns
+    available_features = [col for col in sentiment_feature_cols if col in features.columns]
     
-    print(f"\nSentiment-Aware Model (Price + Sentiment features):")
-    print(f"  Features: {', '.join(sentiment_metrics['features'])}")
-    print(f"  Training samples: {sentiment_metrics['train_size']}")
-    print(f"  Validation samples: {sentiment_metrics['val_size']}")
-    print(f"  Validation MAE: ${sentiment_metrics['mae']:.2f}")
-    print(f"  Validation RMSE: ${sentiment_metrics['rmse']:.2f}")
+    model = train_baseline_model(features, feature_columns=available_features)
     
-    print(f"\n{'='*60}")
-    print("IMPACT SUMMARY")
-    print(f"{'='*60}")
-    print(f"Baseline RMSE:  ${baseline_metrics['rmse']:.2f}")
-    print(f"Sentiment RMSE: ${sentiment_metrics['rmse']:.2f}")
-    if sentiment_metrics['improvement'] > 0:
-        print(f"Improvement:    {sentiment_metrics['improvement']:.2f}% (sentiment helps!)")
-    else:
-        print(f"Improvement:    {sentiment_metrics['improvement']:.2f}% (sentiment doesn't help)")
-    print(f"{'='*60}")
-    
-    # Step 11: Predict next trading day's closing price using sentiment-aware model
+    # Step 12: Predict next trading day's closing price
     latest_features = features.iloc[-1]
-    prediction = predict_next_close(sentiment_model, latest_features, sentiment_metrics['features'])
+    prediction = predict_next_close(model, latest_features, available_features)
     
     print(f"\n{'='*60}")
-    print(f"Sentiment-aware predicted next-day closing price for {stock_name}: ${prediction:.2f}")
+    print(f"Multi-source sentiment-aware predicted next-day closing price for {stock_name}: ${prediction:.2f}")
     print(f"{'='*60}")
     
-    # Step 12: Fetch search trends data (TODO)
-    # trends_data = data.trends.fetch_search_trends(stock_name, start_date, end_date)
+    # Step 13: Export features to CSV
+    csv_filename = f"features_{stock_name}_{start_date}_to_{end_date}.csv"
+    features_export = features.reset_index()
+    features_export = features_export.rename(columns={'date': 'Date'})
+    features_export.to_csv(csv_filename, index=False)
     
-    # Step 13: Combine all features (TODO)
-    # combined_features = combine_features(technical_features, sentiment_features, trends_data)
+    print(f"\n{'='*60}")
+    print(f"Features exported to: {csv_filename}")
+    print(f"Rows exported: {len(features_export)}")
+    print(f"{'='*60}")
     
-    # Step 14: Retrain with all features (TODO)
-    # model = model.train.train_model(combined_features)
+    # Step 14: Generate prediction log
+    print(f"\nGenerating prediction log...")
     
-    # Step 15: Make final prediction (TODO)
-    # prediction = model.predict.predict_next_day(model, combined_features)
+    predictions_log = []
+    min_train_size = 30
+    
+    df = features.copy()
+    df['target'] = df['Close'].shift(-1)
+    df = df.dropna()
+    
+    for i in range(min_train_size, len(df)):
+        train_data = df.iloc[:i]
+        test_row = df.iloc[i]
+        
+        X_train = train_data[available_features].values
+        y_train = train_data['target'].values
+        
+        X_test = test_row[available_features].values.reshape(1, -1)
+        actual_price = test_row['target']
+        
+        from sklearn.ensemble import RandomForestRegressor
+        model_temp = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+        model_temp.fit(X_train, y_train)
+        
+        predicted_price = model_temp.predict(X_test)[0]
+        
+        predictions_log.append({
+            'Date': test_row.name.strftime('%Y-%m-%d'),
+            'Actual_Closing_Price': actual_price,
+            'Predicted_Closing_Price': predicted_price
+        })
+    
+    predictions_df = pd.DataFrame(predictions_log)
+    predictions_csv = f"predictions_{stock_name}_{start_date}_to_{end_date}.csv"
+    predictions_df.to_csv(predictions_csv, index=False)
+    
+    print(f"\n{'='*60}")
+    print(f"Predictions exported to: {predictions_csv}")
+    print(f"Total predictions generated: {len(predictions_df)}")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":
