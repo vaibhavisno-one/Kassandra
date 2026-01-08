@@ -12,6 +12,8 @@ import sys
 from data.prices import fetch_historical_prices
 from utils.dates import validate_and_normalize_dates
 from features.technical import build_technical_features
+from model.train import train_baseline_model
+from model.predict import predict_next_close
 
 
 def main(stock_name: str, start_date: str, end_date: str):
@@ -44,26 +46,41 @@ def main(stock_name: str, start_date: str, end_date: str):
     print("\nLast 5 rows of features:")
     print(features.tail())
     
-    # Step 6: Fetch news sentiment data (TODO)
+    # Step 6: Train baseline model
+    print(f"\nTraining baseline model...")
+    model, metrics = train_baseline_model(features)
+    
+    print(f"\nModel trained successfully!")
+    print(f"Training samples: {metrics['train_size']}")
+    print(f"Validation samples: {metrics['val_size']}")
+    print(f"Validation MAE: ${metrics['mae']:.2f}")
+    print(f"Validation RMSE: ${metrics['rmse']:.2f}")
+    
+    # Step 7: Predict next trading day's closing price
+    latest_features = features.iloc[-1]
+    prediction = predict_next_close(model, latest_features)
+    
+    print(f"\n{'='*60}")
+    print(f"Predicted next-day closing price for {stock_name}: ${prediction:.2f}")
+    print(f"{'='*60}")
+    
+    # Step 8: Fetch news sentiment data (TODO)
     # news_data = data.news.fetch_news_sentiment(stock_name, start_date, end_date)
     
-    # Step 7: Fetch search trends data (TODO)
+    # Step 9: Fetch search trends data (TODO)
     # trends_data = data.trends.fetch_search_trends(stock_name, start_date, end_date)
     
-    # Step 8: Extract sentiment features from news (TODO)
+    # Step 10: Extract sentiment features from news (TODO)
     # sentiment_features = features.sentiment.extract_features(news_data)
     
-    # Step 9: Combine all features (TODO)
+    # Step 11: Combine all features (TODO)
     # combined_features = combine_features(technical_features, sentiment_features, trends_data)
     
-    # Step 10: Train or load model (TODO)
+    # Step 12: Retrain with all features (TODO)
     # model = model.train.train_model(combined_features)
     
-    # Step 11: Make prediction (TODO)
+    # Step 13: Make final prediction (TODO)
     # prediction = model.predict.predict_next_day(model, combined_features)
-    
-    # Step 12: Return prediction (TODO)
-    # return prediction
 
 
 if __name__ == "__main__":
