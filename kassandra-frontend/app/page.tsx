@@ -17,10 +17,9 @@ export default function Home() {
       
 
       <Hero/>
+
       <br />
       <HowItWorks/>
-
-      
 
       {/* Built for Developers Section */}
       <section id="features" className="container mx-auto px-4 py-24">
