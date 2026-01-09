@@ -114,275 +114,306 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Toast Container */}
             <Toaster toasts={toasts} onDismiss={dismiss} />
 
-            {/* Header */}
-            <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container mx-auto px-4 py-6">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">Prediction Dashboard</h1>
-                        <p className="text-muted-foreground">
-                            Generate sentiment-aware stock predictions using multi-source data fusion
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <div className="container mx-auto px-4 py-8 md:py-12 max-w-6xl">
+                <header className="mb-8">
+                    <p className="text-xxl uppercase md:text-2xl tracking-wider font-bold text-foreground font-medium mb-1">Dashboard</p>
+                    <h1 className="text-xl md:text-xl font-semibold tracking-tight text-muted-foreground">
+                        Predictions
+                    </h1>
+                </header>
 
-            <div className="container mx-auto px-4 py-8 space-y-8">
-                {/* Input Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Configure Prediction</CardTitle>
-                        <CardDescription>
-                            Enter stock symbol and date range to generate prediction
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="stock" className="text-sm font-medium">
-                                Stock Ticker Symbol
-                            </label>
-                            <Input
-                                id="stock"
-                                placeholder="e.g., TSLA, NVDA, AAPL"
-                                value={stock}
-                                onChange={(e) => setStock(e.target.value.toUpperCase())}
-                                className="max-w-md"
-                                disabled={isLoading}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Enter a valid stock ticker symbol
-                            </p>
-                        </div>
-
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Start Date</label>
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={setStartDate}
-                                    className="rounded-md border"
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">End Date</label>
-                                <Calendar
-                                    mode="single"
-                                    selected={endDate}
-                                    onSelect={setEndDate}
-                                    className="rounded-md border"
-                                    disabled={isLoading}
-                                />
-                            </div>
-                        </div>
-
-                        <Button
-                            onClick={handleRunPrediction}
-                            disabled={isLoading || !stock || !startDate || !endDate}
-                            size="lg"
-                            className="w-full md:w-auto"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <svg
-                                        className="mr-2 h-4 w-4 animate-spin"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        ></circle>
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    Running Model…
-                                </>
-                            ) : (
-                                'Run Prediction'
-                            )}
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Results Section */}
-                <div className="grid gap-6 md:grid-cols-2">
-                    {/* Predicted Price Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Predicted Next-Day Closing Price</CardTitle>
-                            <CardDescription>
-                                ML-generated forecast based on sentiment fusion
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoading ? (
-                                <>
-                                    <div className="flex items-baseline gap-2">
-                                        <Skeleton className="h-14 w-40" />
-                                        <Skeleton className="h-4 w-8" />
-                                    </div>
-                                    <Skeleton className="mt-4 h-3 w-48" />
-                                </>
-                            ) : hasData ? (
-                                <>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-5xl font-bold">${predictionState.data!.predicted_close.toFixed(2)}</span>
-                                        <span className="text-sm text-muted-foreground">USD</span>
-                                    </div>
-                                    <p className="mt-4 text-xs text-muted-foreground">
-                                        Generated on {new Date(predictionState.data!.last_updated).toLocaleString()}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-5xl font-bold text-muted-foreground">—</span>
-                                        <span className="text-sm text-muted-foreground">USD</span>
-                                    </div>
-                                    <p className="mt-4 text-xs text-muted-foreground">
-                                        Run a prediction to see results
-                                    </p>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Sentiment Breakdown Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Sentiment Breakdown</CardTitle>
-                            <CardDescription>
-                                Multi-source sentiment analysis
-                            </CardDescription>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <Card className="md:col-span-4 border border-border rounded-2xl">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-medium tracking-tight">Ticker</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            <Input
+                                id="stock"
+                                placeholder="NYSE"
+                                value={stock}
+                                onChange={(e) => setStock(e.target.value.toUpperCase())}
+                                className="h-10 text-lg font-mono tracking-wide border-border bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring transition-colors rounded-xl"
+                                disabled={isLoading}
+                            />
+                            <Button
+                                onClick={handleRunPrediction}
+                                disabled={isLoading || !stock || !startDate || !endDate}
+                                className="w-full h-10 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg
+                                            className="mr-2 h-3.5 w-3.5 animate-spin"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        Running…
+                                    </>
+                                ) : (
+                                    'Run Prediction'
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="md:col-span-4 border border-border rounded-2xl">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-medium tracking-tight">Start Date</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Calendar
+                                mode="single"
+                                selected={startDate}
+                                onSelect={setStartDate}
+                                className="
+    rounded-xl
+    border border-border/60
+    bg-background
+    p-3
+    text-sm
+  "
+                                classNames={{
+                                    months: "space-y-3",
+                                    month: "space-y-2",
+                                    caption:
+                                        "flex items-center justify-between px-1 text-sm font-medium",
+                                    caption_label: "text-sm tracking-tight",
+                                    nav: "flex items-center gap-1",
+                                    nav_button:
+                                        "h-7 w-7 rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+                                    table: "w-full border-collapse",
+                                    head_row: "flex",
+                                    head_cell:
+                                        "w-9 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground",
+                                    row: "flex w-full mt-1",
+                                    cell:
+                                        "relative h-9 w-9 p-0 text-center text-sm font-mono tabular-nums",
+                                    day:
+                                        "h-9 w-9 rounded-md hover:bg-muted transition-colors",
+                                    day_selected:
+                                        "bg-foreground text-background hover:bg-foreground",
+                                    day_today:
+                                        "border border-border text-foreground",
+                                    day_outside:
+                                        "text-muted-foreground opacity-40",
+                                    day_disabled:
+                                        "text-muted-foreground opacity-30",
+                                }}
+                            />
+
+                        </CardContent>
+                    </Card>
+
+                    <Card className="md:col-span-4 border border-border rounded-2xl">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-medium tracking-tight">End Date</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Calendar
+                                mode="single"
+                                selected={endDate}
+                                onSelect={setEndDate}
+                                className="
+    rounded-xl
+    border border-border/60
+    bg-background
+    p-3
+    text-sm
+  "
+                                classNames={{
+                                    months: "space-y-3",
+                                    month: "space-y-2",
+                                    caption:
+                                        "flex items-center justify-between px-1 text-sm font-medium",
+                                    caption_label: "text-sm tracking-tight",
+                                    nav: "flex items-center gap-1",
+                                    nav_button:
+                                        "h-7 w-7 rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+                                    table: "w-full border-collapse",
+                                    head_row: "flex",
+                                    head_cell:
+                                        "w-9 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground",
+                                    row: "flex w-full mt-1",
+                                    cell:
+                                        "relative h-9 w-9 p-0 text-center text-sm font-mono tabular-nums",
+                                    day:
+                                        "h-9 w-9 rounded-md hover:bg-muted transition-colors",
+                                    day_selected:
+                                        "bg-foreground text-background hover:bg-foreground",
+                                    day_today:
+                                        "border border-border text-foreground",
+                                    day_outside:
+                                        "text-muted-foreground opacity-40",
+                                    day_disabled:
+                                        "text-muted-foreground opacity-30",
+                                }}
+                            />
+
+                        </CardContent>
+                    </Card>
+
+                    <Card className="md:col-span-8 border border-border rounded-2xl">
+                        <CardHeader className="pb-2">
+                            <CardDescription className="text-xs text-muted-foreground uppercase tracking-wider">Predicted Close</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
                             {isLoading ? (
-                                <>
-                                    {[1, 2, 3, 4].map((i) => (
-                                        <div key={i} className="flex items-center justify-between">
-                                            <Skeleton className="h-4 w-32" />
-                                            <Skeleton className="h-6 w-16" />
-                                        </div>
-                                    ))}
-                                </>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-16 w-56" />
+                                    <Skeleton className="h-3 w-40" />
+                                </div>
+                            ) : hasData ? (
+                                <div className="space-y-1">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-5xl md:text-6xl font-semibold tracking-tighter text-foreground tabular-nums font-mono">
+                                            ${predictionState.data!.predicted_close.toFixed(2)}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground font-medium">USD</span>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground/70 font-mono tabular-nums">
+                                        {new Date(predictionState.data!.last_updated).toLocaleString()}
+                                    </p>
+                                </div>
                             ) : (
-                                <>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">News Sentiment</span>
-                                        <Badge variant={hasData ? 'default' : 'outline'}>
-                                            {hasData ? predictionState.data!.sentiment_breakdown.news_sentiment.toFixed(4) : '—'}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Wikipedia Views</span>
-                                        <Badge variant="outline">
-                                            {hasData ? predictionState.data!.sentiment_breakdown.wikipedia_views.toFixed(0) : '—'}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Google Trends</span>
-                                        <Badge variant="outline">
-                                            {hasData ? predictionState.data!.sentiment_breakdown.google_trends_score.toFixed(2) : '—'}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center justify-between border-t pt-4">
-                                        <span className="text-sm font-medium">Combined Score</span>
-                                        <Badge variant={hasData ? 'default' : 'outline'}>
-                                            {hasData ? predictionState.data!.sentiment_breakdown.combined_sentiment.toFixed(4) : '—'}
-                                        </Badge>
-                                    </div>
-                                </>
+                                <div className="space-y-1">
+                                    <span className="text-5xl md:text-6xl font-semibold text-muted-foreground/20 tabular-nums font-mono">—</span>
+                                    <p className="text-[11px] text-muted-foreground/50">
+                                        Awaiting prediction
+                                    </p>
+                                </div>
                             )}
                         </CardContent>
                     </Card>
-                </div>
 
-                {/* CSV Download Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Export Data</CardTitle>
-                        <CardDescription>
-                            Download prediction results and feature data
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Button
-                                variant="outline"
-                                disabled={!hasData}
-                                onClick={handleDownloadFeatures}
-                                className="flex-1 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                Download Feature CSV
-                            </Button>
-                            <Button
-                                variant="outline"
-                                disabled={!hasData}
-                                onClick={handleDownloadPredictions}
-                                className="flex-1 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                Download Prediction Log CSV
-                            </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            {hasData
-                                ? 'Click buttons above to download CSV files'
-                                : 'Run a prediction to enable CSV export'}
-                        </p>
-                    </CardContent>
-                </Card>
+                    <Card className="md:col-span-4 border border-border rounded-2xl">
+                        <CardHeader className="pb-2">
+                            <CardDescription className="text-xs text-muted-foreground uppercase tracking-wider">Sentiment</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            {isLoading ? (
+                                <div className="space-y-2.5">
+                                    {[1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="flex items-center justify-between">
+                                            <Skeleton className="h-3 w-16" />
+                                            <Skeleton className="h-4 w-14" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between py-0.5">
+                                        <span className="text-xs text-muted-foreground">News</span>
+                                        <span className="text-xs font-mono tabular-nums text-foreground">
+                                            {hasData ? predictionState.data!.sentiment_breakdown.news_sentiment.toFixed(4) : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-0.5">
+                                        <span className="text-xs text-muted-foreground">Wikipedia</span>
+                                        <span className="text-xs font-mono tabular-nums text-foreground">
+                                            {hasData ? predictionState.data!.sentiment_breakdown.wikipedia_views.toFixed(0) : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-0.5">
+                                        <span className="text-xs text-muted-foreground">Trends</span>
+                                        <span className="text-xs font-mono tabular-nums text-foreground">
+                                            {hasData ? predictionState.data!.sentiment_breakdown.google_trends_score.toFixed(2) : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-1 mt-1.5 pt-1.5 border-t border-border/50">
+                                        <span className="text-xs font-medium text-foreground">Combined</span>
+                                        <span className="text-xs font-mono font-medium tabular-nums text-foreground">
+                                            {hasData ? predictionState.data!.sentiment_breakdown.combined_sentiment.toFixed(4) : '—'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                {/* Status Footer */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium">Last Updated</p>
-                                {isLoading ? (
-                                    <Skeleton className="h-4 w-48" />
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">
-                                        {hasData ? new Date(predictionState.data!.last_updated).toLocaleString() : '—'}
-                                    </p>
-                                )}
+                    <Card className="md:col-span-6 border border-border rounded-2xl">
+                        <CardHeader className="pb-2">
+                            <CardDescription className="text-xs text-muted-foreground uppercase tracking-wider">Export</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    disabled={!hasData}
+                                    onClick={handleDownloadFeatures}
+                                    className="flex-1 h-9 text-xs font-medium rounded-lg border-border/70 transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted/50"
+                                >
+                                    Features CSV
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    disabled={!hasData}
+                                    onClick={handleDownloadPredictions}
+                                    className="flex-1 h-9 text-xs font-medium rounded-lg border-border/70 transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted/50"
+                                >
+                                    Predictions CSV
+                                </Button>
                             </div>
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium">Data Source Status</p>
-                                <div className="flex flex-wrap gap-2">
-                                    <Badge variant="secondary" className="text-xs">
-                                        <div className={`mr-1 h-2 w-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-muted'}`} />
-                                        Yahoo Finance
+                            {!hasData && (
+                                <p className="text-[10px] text-muted-foreground/60 mt-2">
+                                    Run a prediction first
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="md:col-span-6 border border-border rounded-2xl">
+                        <CardContent className="py-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Updated</p>
+                                    {isLoading ? (
+                                        <Skeleton className="h-4 w-28" />
+                                    ) : (
+                                        <p className="text-xs font-mono tabular-nums text-foreground">
+                                            {hasData ? new Date(predictionState.data!.last_updated).toLocaleString() : '—'}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Badge variant="outline" className="text-[12px] font-normal px-1.5 py-0 h-10 rounded-md bg-muted/50 border-0">
+                                        <span className={`mr-1 h-2 w-2 rounded-full inline-block ${hasData ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                                        Yahoo
                                     </Badge>
-                                    <Badge variant="secondary" className="text-xs">
-                                        <div className={`mr-1 h-2 w-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-muted'}`} />
-                                        Google News
+                                    <Badge variant="outline" className="text-[12px] font-normal px-1.5 py-0 h-10 rounded-md bg-muted/50 border-0">
+                                        <span className={`mr-1 h-2 w-2 rounded-full inline-block ${hasData ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                                        News
                                     </Badge>
-                                    <Badge variant="secondary" className="text-xs">
-                                        <div className={`mr-1 h-2 w-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-muted'}`} />
-                                        Google Trends
+                                    <Badge variant="outline" className="text-[12px] font-normal px-1.5 py-0 h-10 rounded-md bg-muted/50 border-0">
+                                        <span className={`mr-1 h-2 w-2 rounded-full inline-block ${hasData ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                                        Trends
                                     </Badge>
-                                    <Badge variant="secondary" className="text-xs">
-                                        <div className={`mr-1 h-2 w-2 rounded-full ${hasData ? 'bg-green-500' : 'bg-muted'}`} />
-                                        Wikipedia
+                                    <Badge variant="outline" className="text-[12px] font-normal px-1.5 py-0 h-10 rounded-md bg-muted/50 border-0">
+                                        <span className={`mr-1 h-2 w-2 rounded-full inline-block ${hasData ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                                        Wiki
                                     </Badge>
                                 </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

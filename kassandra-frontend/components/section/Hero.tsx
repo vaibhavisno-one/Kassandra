@@ -8,7 +8,7 @@ export const Hero = () => {
   return (
     <section className="container mx-auto px-4 py-24 md:py-32">
       <div className="mx-auto max-w-4xl text-center space-y-8">
-        <Badge variant="outline" className="mb-4">
+        <Badge variant="outline" className="mb-4 h-10 w-64">
           Universal Sentiment Engine
         </Badge>
 

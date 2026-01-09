@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kassandra",
   description: "Predict Stock Movements Using Real-World Sentiment",
+  icons: {
+    icon: "/stock.png",
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +34,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
+        <Footer/>
       </body>
     </html>
   );

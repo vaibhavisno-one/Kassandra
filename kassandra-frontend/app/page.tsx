@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Hero } from '@/pages/Hero';
+import { Hero } from '@/components/section/Hero';
 import HowItWorks from '@/components/section/How-it-works';
 import Footer from '@/components/common/Footer';
 import DevelopersSection from '@/components/section/Developers-section';
@@ -17,14 +17,11 @@ import LogoMarquee from '@/components/section/LogoMarquee';
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      
+      <Hero />
+      <HowItWorks />
+      <DevelopersSection />
+      <LogoMarquee />
 
-      <Hero/>
-      <HowItWorks/>
-
-      <DevelopersSection/>
-      <LogoMarquee/>
-      
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-24">
@@ -47,7 +44,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer/>
+      
     </div>
   );
 }
