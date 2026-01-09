@@ -21,7 +21,7 @@ return(
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
+            <Card className="relative overflow-hidden border-2 hover:shadow-xl hover:shadow-blue-300 transition-all duration-300 ease-in-out">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
@@ -52,7 +52,7 @@ return(
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
+            <Card className="relative overflow-hidden border-2 hover:shadow-xl hover:shadow-purple-300 transition-all duration-300 ease-in-out">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
@@ -83,7 +83,7 @@ return(
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
+            <Card className="relative overflow-hidden border-2 hover:shadow-xl hover:shadow-green-300 transition-all duration-300 ease-in-out">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
