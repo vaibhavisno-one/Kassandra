@@ -8,186 +8,19 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Hero } from '@/pages/Hero';
+import HowItWorks from '@/components/landing/How-it-works';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-semibold">Kassandra</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              How It Works
-            </Link>
-            <Link href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              FAQ
-            </Link>
-            <Link href="/dashboard">
-              <Button size="sm">Try Dashboard</Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-24 md:py-32">
-        <div className="mx-auto max-w-4xl text-center space-y-8">
-          <Badge variant="secondary" className="mb-4">
-            Universal Sentiment Engine
-          </Badge>
+      <Hero/>
+      <br />
+      <HowItWorks/>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Predict Stock Movements Using Real-World Sentiment
-          </h1>
-
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Combine live market data with multi-source sentiment analysis from news,
-            Google Trends, and Wikipedia to generate explainable ML predictions.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link href="/dashboard">
-              <Button size="lg" className="text-lg px-8 h-12">
-                Launch Dashboard →
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 h-12">
-              View Documentation
-            </Button>
-          </div>
-
-          <div className="pt-8 flex items-center justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-              <span>Live Data</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-blue-500" />
-              <span>Explainable AI</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-purple-500" />
-              <span>CSV Export</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="container mx-auto px-4 py-24 bg-muted/30">
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="outline">How It Works</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Three Steps to Prediction
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Our ML pipeline transforms raw data into actionable insights
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 font-bold text-xl">
-                    1
-                  </div>
-                </div>
-                <CardTitle className="text-2xl">Input</CardTitle>
-                <CardDescription className="text-base">
-                  Provide stock symbol and date range
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                    <span>Historical price data from Yahoo Finance</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                    <span>Technical indicators (MA, volatility)</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                    <span>Configurable time windows</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500 font-bold text-xl">
-                    2
-                  </div>
-                </div>
-                <CardTitle className="text-2xl">Sentiment Fusion</CardTitle>
-                <CardDescription className="text-base">
-                  Multi-source sentiment aggregation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-purple-500 flex-shrink-0" />
-                    <span>News sentiment via VADER analysis</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-purple-500 flex-shrink-0" />
-                    <span>Google Trends search interest</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-purple-500 flex-shrink-0" />
-                    <span>Wikipedia pageview analytics</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/10 text-green-500 font-bold text-xl">
-                    3
-                  </div>
-                </div>
-                <CardTitle className="text-2xl">Prediction</CardTitle>
-                <CardDescription className="text-base">
-                  ML-powered next-day forecast
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
-                    <span>Random Forest regression model</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
-                    <span>Explainable feature breakdown</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
-                    <span>Exportable CSV predictions</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Built for Developers Section */}
       <section id="features" className="container mx-auto px-4 py-24">
