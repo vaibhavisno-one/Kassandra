@@ -39,7 +39,7 @@ pip install -r requirements.txt
 Run the pipeline for any stock and date range:
 
 ```bash
-python main.py TSLA 2023-01-01 2023-12-31
+python -m uvicorn app.main:app --reload --port 8000                             
 ```
 
 The system will:
@@ -98,3 +98,6 @@ No API keys required. Data availability depends on external services.
 - Additional sentiment sources (Twitter, Reddit)
 - Deep learning models
 - Real-time prediction API
+
+
+MADE BY [vaibhavisno-one](https://github.com/vaibhavisno-one)
