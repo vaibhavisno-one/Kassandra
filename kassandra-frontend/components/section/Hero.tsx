@@ -1,6 +1,9 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+
 
 
 export const Hero = () => {
@@ -44,15 +47,16 @@ export const Hero = () => {
           </div>
 
 
-          <div className="flex relative  items-center justify-center pt-10 z-10 peer hover:blur-[6px] transition-all duration-300 ease-in-out ">
+          <div className="flex relative  items-center justify-center pt-10 z-10 group-hover:blur-[6px] transition-all duration-300 ease-in-out ">
             <div className="w-full   border-2 rounded-xl border-gray-200 shadow-lg shadow-blue-600/50">
               <img src="/dashboard.png" alt="product dashboard" className="h-[600px] w-[100%] rounded-xl z-10  " />
             </div>
           </div>
-          <div className="hidden md:inline-flex absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-[20] opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 duration-100 ease-in-out drop-shadow-[0_5px_64px_rgba(0,0,0,0.12)]">
-            <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 dark:ring-offset-neutral-950 dark:focus-visible:ring-neutral-300 cursor-pointer duration-80 relative border !border-transparent bg-white hover:bg-neutral-100 hover:text-neutral-900 shadow-[0_0px_1px_rgba(0,0,0,0.45),0_2px_3px_rgba(0,0,0,0.05),0_0px_1px_rgba(0,0,0,0.07)] h-10 px-4 py-2 rounded-[10px] w-auto">Get Free Trial</button>
+          <div className="hidden md:inline-flex absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-[20] opacity-0 group-hover:opacity-100
+           scale-90 group-hover:scale-105 duration-100 ease-in-out drop-shadow-[0_5px_64px_rgba(0,0,0,0.12)]">
+            <button onClick={() => window.location.href = "/dashboard"} className="border border-gray-400 rounded-full px-4 py-2 bg-gray-700/10 shadow-xl shadow-gray-600/50 cursor-pointer hover:bg-blue-600/80 hover:text-white transition-all duration-300 ease-in-out" >Try Now</button>
           </div>
-          
+
 
 
         </div>
